@@ -1,0 +1,7 @@
+@baseUrl = http://localhost:3000
+
+### Obter token atual (usa cache se ainda válido)
+GET {{baseUrl}}/auth/token
+
+### Forçar renovação do token
+POST {{baseUrl}}/auth/token

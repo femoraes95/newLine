@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:3000
+
+### Cadastrar pessoa (campos mínimos obrigatórios)
+POST {{baseUrl}}/persons
+Content-Type: application/json
+
+{
+  "name": "Paciente Teste",
+  "visitorStartDate": "2026-05-04T00:00:00Z",
+  "visitorEndDate": "2026-05-05T00:00:00Z"
+}
+
+###
+
+### Cadastrar pessoa (cadastro completo)
+POST {{baseUrl}}/persons
+Content-Type: application/json
+
+{
+  "name": "JONATHAN SUN",
+  "registrationName": "JONATHAN SUN",
+  "visitorStartDate": "2026-05-04T00:00:00Z",
+  "visitorEndDate": "2026-05-10T00:00:00Z",
+  "cardNumber": 96058790,
+  "doc": "00960587900",
+  "documentType": 1
+}
+
+###
+
+### Atualizar pessoa por ID
+PUT {{baseUrl}}/persons/123
+Content-Type: application/json
+
+{
+  "name": "Paciente Atualizado",
+  "visitorEndDate": "2026-05-15T00:00:00Z"
+}
+
+###
+
+### Buscar pessoas por nome
+GET {{baseUrl}}/persons/search?Value=João
+
+###
+
+### Buscar pessoas por idNumber
+GET {{baseUrl}}/persons/search?IdNumber=12345678900

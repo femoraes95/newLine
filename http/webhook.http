@@ -1,0 +1,39 @@
+@baseUrl = http://localhost:4777
+
+### Webhook - Cadastrar paciente (startDate=agora, endDate=agora+VISITOR_ACCESS_HOURS)
+POST {{baseUrl}}/webhook/patient
+Content-Type: application/json
+
+{
+  "name": "Paciente Webhook",
+  "type": "person"
+}
+
+###
+
+### Webhook - Cadastrar visitante automaticamente
+POST {{baseUrl}}/webhook/patient
+Content-Type: application/json
+
+{
+  "name": "Visitante Webhook",
+  "type": "visitor"
+}
+
+###
+
+### Webhook - Cadastrar com cardNumber fixo (ex: ID externo do sistema)
+POST {{baseUrl}}/webhook/patient
+Content-Type: application/json
+
+{
+  "name": "PAC - FELIPE MORAES",
+  "cardNumber": 999999,
+  "type": "person",
+  "doc": "432364"
+}
+
+###
+
+### Health check do serviço
+GET {{baseUrl}}/health

@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:3000
+
+### Cadastrar visitante (campos mínimos)
+POST {{baseUrl}}/visitors
+Content-Type: application/json
+
+{
+  "name": "Visitante Teste",
+  "visitorStartDate": "2026-05-04T00:00:00Z",
+  "visitorEndDate": "2026-05-04T23:59:59Z"
+}
+
+###
+
+### Cadastrar visitante com cardNumber customizado
+POST {{baseUrl}}/visitors
+Content-Type: application/json
+
+{
+  "name": "Maria Oliveira",
+  "visitorStartDate": "2026-05-04T08:00:00Z",
+  "visitorEndDate": "2026-05-04T18:00:00Z",
+  "cardNumber": 99988877,
+  "email": "maria@email.com",
+  "phoneNumber": "(11)91234-5678"
+}
