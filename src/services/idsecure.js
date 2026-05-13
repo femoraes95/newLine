@@ -1,6 +1,8 @@
 const axios = require('axios');
 const { getToken, clearToken } = require('./auth');
 
+const DEFAULT_PERSON_GROUP = 1003;
+
 async function request(method, path, data, params) {
   const token = await getToken();
 
@@ -43,7 +45,10 @@ function generateCardNumber() {
 }
 
 async function createPerson(payload) {
-  return request('POST', '/api/v1/persons', payload);
+  return request('POST', '/api/v1/persons', {
+    ...payload,
+    personGroup: DEFAULT_PERSON_GROUP,
+  });
 }
 
 async function updatePerson(id, payload) {
@@ -66,4 +71,10 @@ async function searchPersons(query = {}) {
   });
 }
 
-module.exports = { createPerson, updatePerson, createVisitor, searchPersons, generateCardNumber };
+module.exports = {
+  createPerson,
+  updatePerson,
+  createVisitor,
+  searchPersons,
+  generateCardNumber,
+};
