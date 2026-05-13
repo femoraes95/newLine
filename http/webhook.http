@@ -27,10 +27,10 @@ POST {{baseUrl}}/webhook/patient
 Content-Type: application/json
 
 {
-  "name": "PAC - FELIPE MORAES",
-  "cardNumber": 999999,
+  "name": "PAC - FELIPE MORAES - 123",
+  "cardNumber": 9999777,
   "type": "person",
-  "doc": "432364"
+  "doc": "123456777"
 }
 
 ###
