@@ -2,6 +2,7 @@ const express = require('express');
 const { createPerson, createVisitor, generateCardNumber } = require('../services/idsecure');
 const { recordSuccess } = require('../services/localControl');
 const { reportOperationalError } = require('../services/errorReporter');
+const { addHours, formatSaoPauloDateTime } = require('../services/saoPauloTime');
 
 const router = express.Router();
 
@@ -34,10 +35,10 @@ router.post('/patient', async (req, res, next) => {
 
     const accessHours = parseInt(process.env.VISITOR_ACCESS_HOURS || '24', 10);
     const now = new Date();
-    const end = new Date(now.getTime() + accessHours * 60 * 60 * 1000);
+    const end = addHours(now, accessHours);
 
-    const visitorStartDate = now.toISOString();
-    const visitorEndDate = end.toISOString();
+    const visitorStartDate = formatSaoPauloDateTime(now);
+    const visitorEndDate = formatSaoPauloDateTime(end);
 
     const card = cardNumber || generateCardNumber();
     const operation = type === 'visitor' ? 'webhookCreateVisitor' : 'webhookCreatePerson';
