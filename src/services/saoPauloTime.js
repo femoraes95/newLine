@@ -1,19 +1,5 @@
 const SAO_PAULO_TIME_ZONE = 'America/Sao_Paulo';
 
-function getTimeZoneOffset(date, timeZone) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    timeZoneName: 'longOffset',
-  }).formatToParts(date);
-  const timeZoneName = parts.find((part) => part.type === 'timeZoneName')?.value || 'GMT-03:00';
-
-  if (timeZoneName === 'GMT') {
-    return '+00:00';
-  }
-
-  return timeZoneName.replace('GMT', '');
-}
-
 function getTimeZoneParts(date, timeZone) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -34,9 +20,8 @@ function getTimeZoneParts(date, timeZone) {
 
 function formatSaoPauloDateTime(date = new Date()) {
   const parts = getTimeZoneParts(date, SAO_PAULO_TIME_ZONE);
-  const offset = getTimeZoneOffset(date, SAO_PAULO_TIME_ZONE);
 
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${offset}`;
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`;
 }
 
 function addHours(date, hours) {
