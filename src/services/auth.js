@@ -1,8 +1,5 @@
 const axios = require('axios');
 
-// Token em memória com controle de expiração
-let tokenCache = { token: null, expiresAt: 0 };
-
 async function authenticate() {
   const response = await axios.post(
     `${process.env.IDSECURE_BASE_URL}/api/v1/operators/login`,
@@ -18,24 +15,20 @@ async function authenticate() {
     },
   );
 
-  const { data } = response.data;
-  const token = data.token;
-  // Cache baseado na expiração real retornada pela API
-  tokenCache = { token, expiresAt: Date.now() + 23 * 60 * 60 * 1000 };
+  const {
+    data: { token },
+  } = response.data;
 
   console.log('[Auth] Token renovado com sucesso');
   return token;
 }
 
 async function getToken() {
-  if (tokenCache.token && tokenCache.expiresAt > Date.now()) {
-    return tokenCache.token;
-  }
   return authenticate();
 }
 
 function clearToken() {
-  tokenCache = { token: null, expiresAt: 0 };
+  return null;
 }
 
 module.exports = { getToken, clearToken };

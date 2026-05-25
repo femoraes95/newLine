@@ -19,7 +19,7 @@ async function request(method, path, data, params) {
     });
     return response.data;
   } catch (err) {
-    // Token expirou — limpa cache e tenta uma vez mais
+    // Gera um novo login e tenta uma vez mais em caso de 401.
     if (err.response?.status === 401) {
       clearToken();
       const freshToken = await getToken();
