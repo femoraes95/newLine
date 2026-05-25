@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const crypto = require('crypto');
 const express = require('express');
 const authRoutes = require('./routes/auth');
 const personsRoutes = require('./routes/persons');
@@ -11,6 +12,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+  req.requestId = req.get('x-request-id') || crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.requestId);
+  next();
+});
 
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'newline-idsecure' }));
 

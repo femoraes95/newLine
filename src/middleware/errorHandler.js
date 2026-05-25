@@ -1,10 +1,37 @@
+const {
+  extractErrorData,
+  reportOperationalError,
+  shouldReportOperationalError,
+} = require('../services/errorReporter');
+
+// eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
-  const status = err.response?.status || 500;
-  const message = err.response?.data?.message || err.message || 'Erro interno';
+  const { httpStatus, message, idsecureResponse } = extractErrorData(err);
 
-  console.error(`[Error] ${req.method} ${req.path} → ${status}: ${message}`);
+  console.error(`[Error] ${req.method} ${req.path} -> ${httpStatus}: ${message}`);
 
-  res.status(status).json({ success: false, message, details: err.response?.data || null });
+  const sendResponse = () => {
+    if (!res.headersSent) {
+      res.status(httpStatus).json({ success: false, message, details: idsecureResponse });
+    }
+  };
+
+  if (!shouldReportOperationalError(req)) {
+    sendResponse();
+    return;
+  }
+
+  reportOperationalError(req, {
+    error: err,
+    httpStatus,
+    message,
+    idsecureResponse,
+  })
+    .catch((reportErr) => {
+      console.error(`[ErrorReporter] Falha ao registrar erro operacional: ${reportErr.message}`);
+    });
+
+  sendResponse();
 }
 
 module.exports = errorHandler;
