@@ -133,23 +133,26 @@ async function readControlFile() {
   }
 }
 
-async function findSuccessfulRegistration(idempotencyKey, cardNumber) {
+async function findSuccessfulRegistration(idempotencyKey, cardNumber, ttlMs) {
   if (!idempotencyKey && !cardNumber) {
     return null;
   }
 
   const control = await readControlFile();
+  const cutoff = Date.now() - ttlMs;
 
-  return control.items.find((item) => (
-    item.status === 'success'
-    && (
-      item.idempotencyKey === idempotencyKey
-      || (
-        cardNumber
-        && String(item.cardNumber) === String(cardNumber)
-      )
-    )
-  )) || null;
+  for (let index = control.items.length - 1; index >= 0; index -= 1) {
+    const item = control.items[index];
+    const isInsideWindow = Date.parse(item.timestamp) >= cutoff;
+    const hasSameKey = item.idempotencyKey === idempotencyKey;
+    const hasSameCard = cardNumber && String(item.cardNumber) === String(cardNumber);
+
+    if (item.status === 'success' && isInsideWindow && (hasSameKey || hasSameCard)) {
+      return item;
+    }
+  }
+
+  return null;
 }
 
 async function appendControlItem(item) {

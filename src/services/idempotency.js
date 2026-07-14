@@ -1,4 +1,5 @@
 const registrationLocks = new Map();
+const DEFAULT_IDEMPOTENCY_TTL_MINUTES = 30;
 
 function normalizeKeyPart(value) {
   return String(value).trim().toLowerCase();
@@ -22,6 +23,15 @@ function buildRegistrationKey(req) {
   }
 
   return null;
+}
+
+function getIdempotencyTtlMs() {
+  const configuredMinutes = Number.parseInt(process.env.IDEMPOTENCY_TTL_MINUTES, 10);
+  const ttlMinutes = Number.isInteger(configuredMinutes) && configuredMinutes > 0
+    ? configuredMinutes
+    : DEFAULT_IDEMPOTENCY_TTL_MINUTES;
+
+  return ttlMinutes * 60 * 1000;
 }
 
 async function acquireRegistrationLock(key) {
@@ -53,4 +63,5 @@ async function acquireRegistrationLock(key) {
 module.exports = {
   acquireRegistrationLock,
   buildRegistrationKey,
+  getIdempotencyTtlMs,
 };

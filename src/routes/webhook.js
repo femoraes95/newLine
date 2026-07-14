@@ -3,7 +3,11 @@ const { createPerson, createVisitor, generateCardNumber } = require('../services
 const { findSuccessfulRegistration, recordSuccess } = require('../services/localControl');
 const { reportOperationalError } = require('../services/errorReporter');
 const { addHours, formatSaoPauloDateTime } = require('../services/saoPauloTime');
-const { acquireRegistrationLock, buildRegistrationKey } = require('../services/idempotency');
+const {
+  acquireRegistrationLock,
+  buildRegistrationKey,
+  getIdempotencyTtlMs,
+} = require('../services/idempotency');
 
 const router = express.Router();
 
@@ -41,7 +45,11 @@ router.post('/patient', async (req, res, next) => {
 
     releaseRegistrationLock = await acquireRegistrationLock(idempotencyKey);
 
-    const previousRegistration = await findSuccessfulRegistration(idempotencyKey, cardNumber);
+    const previousRegistration = await findSuccessfulRegistration(
+      idempotencyKey,
+      cardNumber,
+      getIdempotencyTtlMs(),
+    );
 
     if (previousRegistration) {
       console.log(`[Webhook] Cadastro duplicado ignorado: ${idempotencyKey}`);
