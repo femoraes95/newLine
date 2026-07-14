@@ -83,6 +83,7 @@ function getControlContext(req = {}, details = {}) {
     method: details.method ?? req.method ?? null,
     name: details.name ?? requestContext.name ?? body.name ?? null,
     cardNumber: details.cardNumber ?? requestContext.cardNumber ?? body.cardNumber ?? null,
+    idempotencyKey: details.idempotencyKey ?? requestContext.idempotencyKey ?? null,
     requestId: details.requestId ?? getRequestId(req),
   };
 }
@@ -98,6 +99,7 @@ function buildControlItem(status, req, details = {}) {
     method: context.method,
     name: context.name,
     cardNumber: context.cardNumber,
+    idempotencyKey: context.idempotencyKey,
     httpStatus: details.httpStatus ?? (status === 'success' ? 200 : 500),
     message: details.message ?? null,
     idsecureResponse: sanitizeForControl(details.idsecureResponse ?? null),
@@ -129,6 +131,25 @@ async function readControlFile() {
 
     throw err;
   }
+}
+
+async function findSuccessfulRegistration(idempotencyKey, cardNumber) {
+  if (!idempotencyKey && !cardNumber) {
+    return null;
+  }
+
+  const control = await readControlFile();
+
+  return control.items.find((item) => (
+    item.status === 'success'
+    && (
+      item.idempotencyKey === idempotencyKey
+      || (
+        cardNumber
+        && String(item.cardNumber) === String(cardNumber)
+      )
+    )
+  )) || null;
 }
 
 async function appendControlItem(item) {
@@ -175,5 +196,6 @@ function recordError(req, details = {}) {
 module.exports = {
   recordSuccess,
   recordError,
+  findSuccessfulRegistration,
   sanitizeForControl,
 };

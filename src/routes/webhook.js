@@ -1,16 +1,20 @@
 const express = require('express');
 const { createPerson, createVisitor, generateCardNumber } = require('../services/idsecure');
-const { recordSuccess } = require('../services/localControl');
+const { findSuccessfulRegistration, recordSuccess } = require('../services/localControl');
 const { reportOperationalError } = require('../services/errorReporter');
 const { addHours, formatSaoPauloDateTime } = require('../services/saoPauloTime');
+const { acquireRegistrationLock, buildRegistrationKey } = require('../services/idempotency');
 
 const router = express.Router();
 
 router.post('/patient', async (req, res, next) => {
+  let releaseRegistrationLock;
+
   try {
     console.log('[Webhook] Payload recebido:', req.body);
 
-    req.idsecureControl = { operation: 'webhookCreatePatient' };
+    const idempotencyKey = buildRegistrationKey(req);
+    req.idsecureControl = { operation: 'webhookCreatePatient', idempotencyKey };
 
     // eslint-disable-next-line no-unused-vars
     const {
@@ -35,6 +39,22 @@ router.post('/patient', async (req, res, next) => {
       return res.status(400).json({ success: false, message });
     }
 
+    releaseRegistrationLock = await acquireRegistrationLock(idempotencyKey);
+
+    const previousRegistration = await findSuccessfulRegistration(idempotencyKey, cardNumber);
+
+    if (previousRegistration) {
+      console.log(`[Webhook] Cadastro duplicado ignorado: ${idempotencyKey}`);
+
+      return res.status(200).json({
+        success: true,
+        duplicate: true,
+        message: 'Cadastro já processado anteriormente',
+        cardNumber: previousRegistration.cardNumber || cardNumber || null,
+        originalRequestId: previousRegistration.requestId || null,
+      });
+    }
+
     const accessHours = parseInt(process.env.VISITOR_ACCESS_HOURS || '24', 10);
     const now = new Date();
     const end = addHours(now, accessHours);
@@ -44,7 +64,12 @@ router.post('/patient', async (req, res, next) => {
 
     const card = cardNumber || generateCardNumber();
     const operation = type === 'visitor' ? 'webhookCreateVisitor' : 'webhookCreatePerson';
-    req.idsecureControl = { operation, name, cardNumber: card };
+    req.idsecureControl = {
+      operation,
+      name,
+      cardNumber: card,
+      idempotencyKey,
+    };
 
     const payload = {
       name,
@@ -68,6 +93,7 @@ router.post('/patient', async (req, res, next) => {
       operation,
       name,
       cardNumber: card,
+      idempotencyKey,
       httpStatus: 201,
       message: 'Paciente cadastrado via webhook com sucesso',
       idsecureResponse: result,
@@ -84,6 +110,10 @@ router.post('/patient', async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  } finally {
+    if (releaseRegistrationLock) {
+      releaseRegistrationLock();
+    }
   }
 });
 
