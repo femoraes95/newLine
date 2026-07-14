@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.post('/patient', async (req, res, next) => {
   try {
+    console.log('[Webhook] Payload recebido:', req.body);
+
     req.idsecureControl = { operation: 'webhookCreatePatient' };
 
     // eslint-disable-next-line no-unused-vars
