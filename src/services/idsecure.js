@@ -3,6 +3,19 @@ const { getToken, clearToken } = require('./auth');
 
 const DEFAULT_PERSON_GROUP_ID = 1003;
 
+function logRequestError(err, method, path) {
+  const responseData = err.response?.data;
+  const message = responseData?.message || responseData?.error || err.message;
+
+  console.log('[IDSecure] Erro na requisição', {
+    method,
+    path,
+    status: err.response?.status,
+    message,
+    response: responseData,
+  });
+}
+
 async function request(method, path, data, params) {
   const token = await getToken();
 
@@ -23,18 +36,26 @@ async function request(method, path, data, params) {
     if (err.response?.status === 401) {
       clearToken();
       const freshToken = await getToken();
-      const retry = await axios({
-        method,
-        url: `${process.env.IDSECURE_BASE_URL}${path}`,
-        headers: {
-          Authorization: `Bearer ${freshToken}`,
-          'Content-Type': 'application/json',
-        },
-        data,
-        params,
-      });
-      return retry.data;
+
+      try {
+        const retry = await axios({
+          method,
+          url: `${process.env.IDSECURE_BASE_URL}${path}`,
+          headers: {
+            Authorization: `Bearer ${freshToken}`,
+            'Content-Type': 'application/json',
+          },
+          data,
+          params,
+        });
+        return retry.data;
+      } catch (retryErr) {
+        logRequestError(retryErr, method, path);
+        throw retryErr;
+      }
     }
+
+    logRequestError(err, method, path);
     throw err;
   }
 }
