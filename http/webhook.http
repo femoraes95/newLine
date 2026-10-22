@@ -1,12 +1,13 @@
 @baseUrl = http://localhost:4777
 
-### Webhook - Cadastrar paciente (startDate=agora, endDate=agora+VISITOR_ACCESS_HOURS)
+### Webhook - Cadastrar paciente como visitante com QR Code
+### (startDate=agora, endDate=agora+VISITOR_ACCESS_HOURS)
 POST {{baseUrl}}/webhook/patient
 Content-Type: application/json
 
 {
   "name": "Paciente Webhook",
-  "type": "person"
+  "type": "visitor"
 }
 
 ###
@@ -29,7 +30,7 @@ Content-Type: application/json
 {
   "name": "PAC - FELIPE MORAES - 9999",
   "cardNumber": 1600148,
-  "type": "person",
+  "type": "visitor",
   "doc": "1600148"
 }
 

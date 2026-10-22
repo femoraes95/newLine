@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { getToken, clearToken } = require('./auth');
 
-const DEFAULT_PERSON_GROUP_ID = 1003;
+const DEFAULT_PERSON_GROUP_ID = 1004;
 
 function logRequestError(err, method, path) {
   const responseData = err.response?.data;
@@ -77,7 +77,10 @@ async function updatePerson(id, payload) {
 }
 
 async function createVisitor(payload) {
-  return request('POST', '/api/v1/visitors', payload);
+  return request('POST', '/api/v1/visitors', {
+    ...payload,
+    personGroup: [{ groupId: DEFAULT_PERSON_GROUP_ID }],
+  });
 }
 
 async function searchPersons(query = {}) {

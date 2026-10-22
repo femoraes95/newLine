@@ -1,5 +1,5 @@
 const express = require('express');
-const { createPerson, createVisitor, generateCardNumber } = require('../services/idsecure');
+const { createVisitor, generateCardNumber } = require('../services/idsecure');
 const { findSuccessfulRegistration, recordSuccess } = require('../services/localControl');
 const { reportOperationalError } = require('../services/errorReporter');
 const { addHours, formatSaoPauloDateTime } = require('../services/saoPauloTime');
@@ -24,10 +24,14 @@ router.post('/patient', async (req, res, next) => {
     const {
       name,
       cardNumber,
-      type = 'person',
-      personCard: _,
+      // Pacientes recebidos pelo webhook são tratados como visitantes para que
+      // a alta possa encerrar seu acesso sem alterar o cadastro de pessoas.
       ...rest
     } = req.body;
+
+    // O webhook sempre cria visitantes, independentemente do tipo recebido.
+    delete rest.type;
+    delete rest.personCard;
 
     if (!name) {
       const message = 'Campo obrigatório: name';
@@ -63,7 +67,7 @@ router.post('/patient', async (req, res, next) => {
       });
     }
 
-    const accessHours = parseInt(process.env.VISITOR_ACCESS_HOURS || '24', 10);
+    const accessHours = parseInt(process.env.VISITOR_ACCESS_HOURS || '12', 10);
     const now = new Date();
     const end = addHours(now, accessHours);
 
@@ -71,7 +75,7 @@ router.post('/patient', async (req, res, next) => {
     const visitorEndDate = formatSaoPauloDateTime(end);
 
     const card = cardNumber || generateCardNumber();
-    const operation = type === 'visitor' ? 'webhookCreateVisitor' : 'webhookCreatePerson';
+    const operation = 'webhookCreateVisitor';
     req.idsecureControl = {
       operation,
       name,
@@ -85,18 +89,17 @@ router.post('/patient', async (req, res, next) => {
       visitorEndDate,
       password: '00000',
       password2: '00000',
-      personType: 1,
       ...rest,
+      personType: 'Visitant',
       personCard: [{
         personId: 0,
-        type: 3,
+        type: 'QRCODE',
         cardNumber: card,
         readableCode: card,
       }],
     };
 
-    const register = type === 'visitor' ? createVisitor : createPerson;
-    const result = await register(payload);
+    const result = await createVisitor(payload);
     await recordSuccess(req, {
       operation,
       name,

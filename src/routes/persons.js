@@ -50,11 +50,11 @@ router.post('/', async (req, res, next) => {
       visitorEndDate,
       password: '00000',
       password2: '00000',
-      personType: 1,
+      personType: 'Person',
       ...rest,
       personCard: [{
         personId: 0,
-        type: 3,
+        type: 'QRCODE',
         cardNumber: card,
         readableCode: card,
       }],
